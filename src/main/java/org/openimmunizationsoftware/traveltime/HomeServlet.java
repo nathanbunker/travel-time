@@ -52,55 +52,28 @@ public class HomeServlet extends HttpServlet {
           Collections.sort(dataStore.getTravelAgentList());
         }
       } else {
-        Set<String> signatureSet = dataStore.getSignatureSet();
-        signatureSet.clear();
-        List<TravelAgent> travelAgentList = dataStore.getTravelAgentList();
-        for (TravelAgent ta : travelAgentList) {
-          signatureSet.add(ta.getSignature());
+        for (int i = 0; i < 10; i++) {
+          generateNextGeneration(dataStore);
         }
-        Random random = new Random();
-        dataStore.incrementCurrentGeneration();
-        for (int i = DataStore.PARENT_SIZE; i < DataStore.POPULATION_SIZE; i++) {
-          int momP = pickParent(random);
-          int dadP = pickParent(random);
-          TravelAgent mom = travelAgentList.get(momP);
-          TravelAgent dad = travelAgentList.get(dadP);
-          int tooManyTimes = 0;
-          while (mom.areSignaturesEqual(dad) || mom.getTotalTravelTime() == dad.getTotalTravelTime()) {
-            dadP = pickParent(random);
-            dad = travelAgentList.get(dadP);
-            tooManyTimes++;
-            if (tooManyTimes > 1000) {
-              // give up!
-              break;
-            }
-          }
-          TravelAgent child = new TravelAgent(mom, dad, makeName(i));
-          if (!signatureSet.contains(child.getSignature())) {
-            travelAgentList.set(i, child);
-            signatureSet.add(child.getSignature());
-          }
-        }
-        Collections.sort(dataStore.getTravelAgentList());
       }
 
-      out.println("<h3>Top 100</h3>");
+      out.println("<h3>Top 30</h3>");
       out.println("<table>");
       out.println("  <tr>");
       out.println("    <th>Pos</th>");
       out.println("    <th>Signature</th>");
       out.println("    <th>Total Time</th>");
-      out.println("    <th>Generation</th>");
+//      out.println("    <th>Generation</th>");
       // out.println(" <th>Name</th>");
       out.println("  </tr>");
-      for (int i = 0; i < DataStore.POPULATION_SIZE; i++) {
+      for (int i = 0; i < 30; i++) {
         List<TravelAgent> travelAgentList = dataStore.getTravelAgentList();
         TravelAgent ta = travelAgentList.get(i);
         out.println("  <tr>");
         out.println("    <td>" + i + "</td>");
         out.println("    <td>" + ta.getSignature() + "</td>");
         out.println("    <td>" + ta.getTotalTravelTime() + "</td>");
-        out.println("    <td>" + ta.getGeneration() + "</td>");
+  //      out.println("    <td>" + ta.getGeneration() + "</td>");
         // out.println(" <td>" + ta.getName() + "</td>");
         out.println("  </tr>");
       }
@@ -115,6 +88,39 @@ public class HomeServlet extends HttpServlet {
     } finally {
       out.close();
     }
+  }
+
+  private void generateNextGeneration(DataStore dataStore) {
+    Set<String> signatureSet = dataStore.getSignatureSet();
+    signatureSet.clear();
+    List<TravelAgent> travelAgentList = dataStore.getTravelAgentList();
+    for (TravelAgent ta : travelAgentList) {
+      signatureSet.add(ta.getSignature());
+    }
+    Random random = new Random();
+    dataStore.incrementCurrentGeneration();
+    for (int i = DataStore.PARENT_SIZE; i < DataStore.POPULATION_SIZE; i++) {
+      int momP = pickParent(random);
+      int dadP = pickParent(random);
+      TravelAgent mom = travelAgentList.get(momP);
+      TravelAgent dad = travelAgentList.get(dadP);
+      int tooManyTimes = 0;
+      while (mom.areSignaturesEqual(dad) || mom.getTotalTravelTime() == dad.getTotalTravelTime()) {
+        dadP = pickParent(random);
+        dad = travelAgentList.get(dadP);
+        tooManyTimes++;
+        if (tooManyTimes > 1000) {
+          // give up!
+          break;
+        }
+      }
+      TravelAgent child = new TravelAgent(mom, dad, makeName(i));
+      if (!signatureSet.contains(child.getSignature())) {
+        travelAgentList.set(i, child);
+        signatureSet.add(child.getSignature());
+      }
+    }
+    Collections.sort(dataStore.getTravelAgentList());
   }
 
   private static final boolean GAUSIAN = false;
@@ -192,7 +198,7 @@ public class HomeServlet extends HttpServlet {
               String value = csvRecord.get(position);
               Destination destination2 = destinationByPosition.get(position);
               if (destination2 != null && !value.equals("")) {
-                int time = Integer.parseInt(value);
+                float time = Float.parseFloat(value);
                 {
                   TravelTime travelTime = new TravelTime();
                   travelTime.setDestination1(destination1);

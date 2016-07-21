@@ -16,8 +16,8 @@ public class DataStore {
     return signatureSet;
   }
 
-  public static final int POPULATION_SIZE = 1000;
-  public static final int PARENT_SIZE = 500;
+  public static final int POPULATION_SIZE = 10000;
+  public static final int PARENT_SIZE = 5000;
 
   public List<TravelAgent> getTravelAgentList() {
     return travelAgentList;

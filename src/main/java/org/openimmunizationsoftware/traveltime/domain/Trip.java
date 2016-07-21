@@ -5,7 +5,7 @@ import java.util.List;
 
 public class Trip implements Comparable<Trip> {
   private List<TripStop> tripStopList = new ArrayList<TripStop>();
-  private int totalTime = 0;
+  private float totalTime = 0;
   private Double travelScore = null;
   private String generation = "1";
 
@@ -17,7 +17,7 @@ public class Trip implements Comparable<Trip> {
     this.generation = generation;
   }
 
-  public int getTotalTime() {
+  public float getTotalTime() {
     return totalTime;
   }
 
@@ -31,11 +31,11 @@ public class Trip implements Comparable<Trip> {
     return travelScore;
   }
 
-  public void addTotalTime(int totalTime) {
+  public void addTotalTime(float totalTime) {
     this.totalTime = this.totalTime + totalTime;
   }
 
-  public void setTotalTime(int totalTime) {
+  public void setTotalTime(float totalTime) {
     this.totalTime = totalTime;
   }
 

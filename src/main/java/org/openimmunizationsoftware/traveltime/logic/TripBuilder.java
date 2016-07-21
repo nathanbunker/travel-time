@@ -121,6 +121,7 @@ public class TripBuilder {
       }
     }
     setupTrips(tripList, random, destinationsNotVisitedList, generation);
+    Collections.sort(tripList);
     return tripList;
   }
 }

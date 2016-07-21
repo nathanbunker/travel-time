@@ -3,7 +3,7 @@ package org.openimmunizationsoftware.traveltime.domain;
 public class TravelTime implements Comparable<TravelTime> {
   private Destination destination1 = null;
   private Destination destination2 = null;
-  private int time = 0;
+  private float time = 0;
 
   @Override
   public int compareTo(TravelTime tt) {
@@ -17,11 +17,11 @@ public class TravelTime implements Comparable<TravelTime> {
 
   }
 
-  public int getTime() {
+  public float getTime() {
     return time;
   }
 
-  public void setTime(int time) {
+  public void setTime(float time) {
     this.time = time;
   }
 

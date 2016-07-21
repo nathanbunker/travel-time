@@ -4,9 +4,9 @@ public class TripStop {
   private Destination destination = null;
   private TravelTime travelTime = null;
   private String day = "";
-  private int hour = 0;
+  private float hour = 0;
 
-  public void addTime(int h) {
+  public void addTime(float h) {
     this.hour = this.hour + h;
     while (hour >= 24) {
       hour = hour - 24;
@@ -57,17 +57,17 @@ public class TripStop {
     this.day = day;
   }
 
-  public int getHour() {
+  public float getHour() {
     return hour;
   }
 
   public String getHourDisplay() {
     if (hour < 12) {
-      return day + " " + hour;
+      return day + " " + ((int) (hour + 0.75)) + " AM";
     } else if (hour == 12) {
-      return day + " " + hour;
+      return day + " " + ((int) (hour + 0.75)) + " PM";
     }
-    return day + " " + (hour - 12);
+    return day + " " + (((int) (hour + 0.75)) - 12) + " PM";
   }
 
   public String getDescription() {
@@ -79,7 +79,7 @@ public class TripStop {
     return day + " " + (hour - 12) + " PM - " + destination.getCityName();
   }
 
-  public void setHour(int hour) {
+  public void setHour(float hour) {
     this.hour = hour;
   }
 

@@ -13,7 +13,7 @@ public class TravelAgent implements Comparable<TravelAgent> {
   private static final String GOOGLE_API_KEY = "AIzaSyCA9R-LNskrJvC1oV7uiXRMvnWtWBn_qk4";
 
   private List<Trip> tripList;
-  private int totalTravelTime = 0;
+  private float totalTravelTime = 0;
   private DataStore dataStore = null;
   private String generation = "1";
   private String signature = "";
@@ -49,7 +49,7 @@ public class TravelAgent implements Comparable<TravelAgent> {
     this.generation = generation;
   }
 
-  public int getTotalTravelTime() {
+  public float getTotalTravelTime() {
     return totalTravelTime;
   }
 
@@ -63,7 +63,7 @@ public class TravelAgent implements Comparable<TravelAgent> {
 
   public TravelAgent(DataStore dataStore, String name) {
     this.dataStore = dataStore;
-    this.name = name;
+    // this.name = name;
     tripList = TripBuilder.makeTrip(dataStore);
     calculateTotalTime();
   }
@@ -86,7 +86,7 @@ public class TravelAgent implements Comparable<TravelAgent> {
   public TravelAgent(TravelAgent mom, TravelAgent dad, String name) {
     this.dataStore = mom.dataStore;
     this.generation = mom.getGeneration() + "." + dataStore.getCurrentGeneration();
-    this.name = mom.name + "." + name;
+    // this.name = mom.name + "." + name;
     tripList = TripBuilder.makeNewTripList(mom.getTripList(), dad.getTripList(), dataStore, generation);
     calculateTotalTime();
   }
