@@ -6,8 +6,6 @@ import java.net.URLEncoder;
 import java.text.NumberFormat;
 import java.util.List;
 
-import org.openimmunizationsoftware.traveltime.logic.TripBuilder;
-
 public class TravelAgent implements Comparable<TravelAgent> {
 
   private static final String GOOGLE_API_KEY = "AIzaSyCA9R-LNskrJvC1oV7uiXRMvnWtWBn_qk4";
@@ -64,7 +62,13 @@ public class TravelAgent implements Comparable<TravelAgent> {
   public TravelAgent(DataStore dataStore, String name) {
     this.dataStore = dataStore;
     // this.name = name;
-    tripList = TripBuilder.makeTrip(dataStore);
+    tripList = dataStore.getTripBuilder().makeTrip(dataStore);
+    calculateTotalTime();
+  }
+
+  public TravelAgent(TravelAgent travelAgent) {
+    this.dataStore = travelAgent.dataStore;
+    tripList = dataStore.getTripBuilder().clone(travelAgent);
     calculateTotalTime();
   }
 
@@ -87,7 +91,7 @@ public class TravelAgent implements Comparable<TravelAgent> {
     this.dataStore = mom.dataStore;
     this.generation = mom.getGeneration() + "." + dataStore.getCurrentGeneration();
     // this.name = mom.name + "." + name;
-    tripList = TripBuilder.makeNewTripList(mom.getTripList(), dad.getTripList(), dataStore, generation);
+    tripList = dataStore.getTripBuilder().makeNewTripList(mom.getTripList(), dad.getTripList(), dataStore, generation);
     calculateTotalTime();
   }
 
@@ -116,6 +120,7 @@ public class TravelAgent implements Comparable<TravelAgent> {
         out.println("    <th>Site</th>");
         out.println("    <th>City</th>");
         out.println("    <th>Travel Time</th>");
+        out.println("    <th>Description</th>");
         out.println("  </tr>");
         for (TripStop tripStop : trip.getTripStopList()) {
           out.println("  <tr>");
@@ -123,7 +128,12 @@ public class TravelAgent implements Comparable<TravelAgent> {
           out.println("    <td>" + tripStop.getHourDisplay() + "</td>");
           out.println("    <td>" + tripStop.getDestination().getShortName() + "</td>");
           out.println("    <td>" + tripStop.getDestination().getCityName() + "</td>");
-          out.println("    <td>" + tripStop.getTravelTime().getTime() + "</td>");
+          if (tripStop.getTravelTime() == null) {
+            out.println("    <td>-</td>");
+          } else {
+            out.println("    <td>" + tripStop.getTravelTime().getTime() + "</td>");
+          }
+          out.println("    <td>" + tripStop.getDescription() + "</td>");
           out.println("  </tr>");
         }
         out.println("  <tr>");

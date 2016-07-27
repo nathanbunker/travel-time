@@ -2,19 +2,18 @@ package org.openimmunizationsoftware.traveltime.logic;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
-import java.util.Set;
 
 import org.openimmunizationsoftware.traveltime.domain.DataStore;
 import org.openimmunizationsoftware.traveltime.domain.Destination;
+import org.openimmunizationsoftware.traveltime.domain.TravelAgent;
 import org.openimmunizationsoftware.traveltime.domain.TravelTime;
 import org.openimmunizationsoftware.traveltime.domain.Trip;
 import org.openimmunizationsoftware.traveltime.domain.TripStop;
 
-public class TripBuilder {
-  public static List<Trip> makeTrip(DataStore dataStore) {
+public class TripBuilderDisconnected implements TripBuilderInterface {
+  public List<Trip> makeTrip(DataStore dataStore) {
     List<Trip> tripList = new ArrayList<Trip>();
     Random random = new Random();
     List<Destination> destinationsNotVisitedList = new ArrayList<Destination>(dataStore.getDestinationMap().values());
@@ -23,7 +22,8 @@ public class TripBuilder {
     return tripList;
   }
 
-  private static void setupTrips(List<Trip> tripList, Random random, List<Destination> destinationsNotVisitedList, String generation) {
+  private static List<Trip> setupTrips(List<Trip> tripList, Random random, List<Destination> destinationsNotVisitedList,
+      String generation) {
     while (destinationsNotVisitedList.size() > 0) {
       Trip trip = new Trip();
       trip.setGeneration(generation);
@@ -49,48 +49,54 @@ public class TripBuilder {
       int count = 0;
       while (tsp != null && !tsp.getDay().equals("Friday") && !tsp.getDay().equals("Monday") && count < 5) {
         count++;
-        List<TravelTime> travelTimePotential = new ArrayList<TravelTime>();
-        for (TravelTime ttp : tsp.getDestination().getTravelTimeMap().values()) {
-          if (destinationsNotVisitedList.contains(ttp.getDestination2())) {
-            travelTimePotential.add(ttp);
-          }
-        }
+        // List<TravelTime> travelTimePotential = new ArrayList<TravelTime>();
+        // for (TravelTime ttp :
+        // tsp.getDestination().getTravelTimeMap().values()) {
+        // if (destinationsNotVisitedList.contains(ttp.getDestination2())) {
+        // travelTimePotential.add(ttp);
+        // }
+        // }
         if (destinationsNotVisitedList.size() > 0) {
-          Collections.sort(destinationsNotVisitedList);
-          double g = Math.abs(random.nextGaussian());
-          g = g * 0.3 * destinationsNotVisitedList.size();
-          int position = (int) g;
-          if (position >= destinationsNotVisitedList.size()) {
-            position = destinationsNotVisitedList.size() - 1;
-          }
+          // Collections.sort(destinationsNotVisitedList);
+          // double g = Math.abs(random.nextGaussian());
+          // g = g * 0.3 * destinationsNotVisitedList.size();
+          // int position = (int) g;
+          // if (position >= destinationsNotVisitedList.size()) {
+          // position = destinationsNotVisitedList.size() - 1;
+          // }
+          int position = random.nextInt(destinationsNotVisitedList.size());
 
           Destination dn = destinationsNotVisitedList.get(position);
-          destinationsNotVisitedList.remove(position);
           TravelTime travelTimeNext = tsp.getDestination().getTravelTimeMap().get(dn);
 
-          if (travelTimeNext != null) {
-            TripStop tripStopNext = new TripStop();
-            tripStopNext.setDestination(dn);
-            tripStopNext.setTravelTime(travelTimeNext);
-            tripStopNext.setDay(tsp.getDay());
-            tripStopNext.setHour(tsp.getHour());
-            tripStopNext.addTime(5);// 5 hour visit
-            tripStopNext.addTime(travelTimeNext.getTime()); // Travel Time
-            tripStopNext.setToNextWorkingDay(); // Sleep and roll forward to
-                                                // next working day
-            trip.getTripStopList().add(tripStopNext);
-            tsp = tripStopNext;
-            trip.addTotalTime(tsp.getTravelTime().getTime());
-          } else {
-            tsp = null;
+          if (travelTimeNext == null) {
+            travelTimeNext = new TravelTime();
+            travelTimeNext.setDestination1(tsp.getDestination());
+            travelTimeNext.setDestination2(dn);
+            travelTimeNext.setTime(12);
           }
+          destinationsNotVisitedList.remove(position);
+          TripStop tripStopNext = new TripStop();
+          tripStopNext.setDestination(dn);
+          tripStopNext.setTravelTime(travelTimeNext);
+          tripStopNext.setDay(tsp.getDay());
+          tripStopNext.setHour(tsp.getHour());
+          tripStopNext.addTime(5);// 5 hour visit
+          tripStopNext.addTime(travelTimeNext.getTime()); // Travel Time
+          tripStopNext.setToNextWorkingDay(); // Sleep and roll forward to
+                                              // next working day
+          trip.getTripStopList().add(tripStopNext);
+          tsp = tripStopNext;
+          trip.addTotalTime(tsp.getTravelTime().getTime());
         }
       }
       trip.addTotalTime(7); // Time to get home
     }
+    return tripList;
   }
 
-  public static List<Trip> makeNewTripList(List<Trip> tripList1, List<Trip> tripList2, DataStore dataStore, String generation) {
+  public List<Trip> makeNewTripList(List<Trip> tripList1, List<Trip> tripList2, DataStore dataStore,
+      String generation) {
     List<Trip> tripList = new ArrayList<Trip>();
     Random random = new Random();
     tripList1 = new ArrayList<Trip>(tripList1);
@@ -124,4 +130,27 @@ public class TripBuilder {
     Collections.sort(tripList);
     return tripList;
   }
+
+  public List<Trip> clone(TravelAgent travelAgent) {
+    List<Trip> tripList = new ArrayList<Trip>();
+    Random random = new Random();
+    int position = random.nextInt(travelAgent.getTripList().size());
+    int p = 0;
+    for (Trip trip : travelAgent.getTripList()) {
+      if (position == p) {
+        List<Destination> destinationsNotVisitedList = new ArrayList<Destination>();
+        for (TripStop tripStop : trip.getTripStopList()) {
+          destinationsNotVisitedList.add(tripStop.getDestination());
+        }
+        tripList.addAll(TripBuilderDisconnected.setupTrips(tripList, random, destinationsNotVisitedList,
+            travelAgent.getGeneration()));
+      } else {
+        tripList.add(trip);
+      }
+      p++;
+    }
+    Collections.sort(tripList);
+    return tripList;
+  }
+
 }

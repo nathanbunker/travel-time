@@ -5,6 +5,11 @@ public class TripStop {
   private TravelTime travelTime = null;
   private String day = "";
   private float hour = 0;
+  private String description = "";
+
+  public void setDescription(String description) {
+    this.description = description;
+  }
 
   public void addTime(float h) {
     this.hour = this.hour + h;
@@ -49,6 +54,27 @@ public class TripStop {
     }
   }
 
+  public boolean weekAfter(TripStop tspOther) {
+    if (day.equals("Monday")
+        && (tspOther.day.equals("Tuesday") || tspOther.day.equals("Wednesday") || tspOther.day.equals("Thursday")
+            || tspOther.day.equals("Friday") || tspOther.day.equals("Saturday") || tspOther.day.equals("Sunday"))) {
+      return true;
+    }
+    if (day.equals("Tuesday") && (tspOther.day.equals("Wednesday") || tspOther.day.equals("Thursday")
+        || tspOther.day.equals("Friday") || tspOther.day.equals("Saturday") || tspOther.day.equals("Sunday"))) {
+      return true;
+    }
+    if (day.equals("Wednesday") && (tspOther.day.equals("Thursday") || tspOther.day.equals("Friday")
+        || tspOther.day.equals("Saturday") || tspOther.day.equals("Sunday"))) {
+      return true;
+    }
+    if (day.equals("Thursday")
+        && (tspOther.day.equals("Friday") || tspOther.day.equals("Saturday") || tspOther.day.equals("Sunday"))) {
+      return true;
+    }
+    return false;
+  }
+
   public String getDay() {
     return day;
   }
@@ -71,12 +97,7 @@ public class TripStop {
   }
 
   public String getDescription() {
-    if (hour < 12) {
-      return day + " " + hour + " AM - " + destination.getCityName();
-    } else if (hour == 12) {
-      return day + " " + hour + " PM - " + destination.getCityName();
-    }
-    return day + " " + (hour - 12) + " PM - " + destination.getCityName();
+    return description;
   }
 
   public void setHour(float hour) {

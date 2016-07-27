@@ -9,6 +9,10 @@ public class Trip implements Comparable<Trip> {
   private Double travelScore = null;
   private String generation = "1";
 
+  public void add(TripStop tripStop) {
+    tripStopList.add(tripStop);
+  }
+
   public String getGeneration() {
     return generation;
   }

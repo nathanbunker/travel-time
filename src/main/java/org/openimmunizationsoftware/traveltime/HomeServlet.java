@@ -25,6 +25,8 @@ import org.openimmunizationsoftware.traveltime.domain.DataStore;
 import org.openimmunizationsoftware.traveltime.domain.Destination;
 import org.openimmunizationsoftware.traveltime.domain.TravelAgent;
 import org.openimmunizationsoftware.traveltime.domain.TravelTime;
+import org.openimmunizationsoftware.traveltime.logic.TripBuilderFactory;
+import org.openimmunizationsoftware.traveltime.logic.TripBuilderType;
 
 public class HomeServlet extends HttpServlet {
 
@@ -52,7 +54,7 @@ public class HomeServlet extends HttpServlet {
           Collections.sort(dataStore.getTravelAgentList());
         }
       } else {
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 50; i++) {
           generateNextGeneration(dataStore);
         }
       }
@@ -63,7 +65,7 @@ public class HomeServlet extends HttpServlet {
       out.println("    <th>Pos</th>");
       out.println("    <th>Signature</th>");
       out.println("    <th>Total Time</th>");
-//      out.println("    <th>Generation</th>");
+      // out.println(" <th>Generation</th>");
       // out.println(" <th>Name</th>");
       out.println("  </tr>");
       for (int i = 0; i < 30; i++) {
@@ -73,7 +75,7 @@ public class HomeServlet extends HttpServlet {
         out.println("    <td>" + i + "</td>");
         out.println("    <td>" + ta.getSignature() + "</td>");
         out.println("    <td>" + ta.getTotalTravelTime() + "</td>");
-  //      out.println("    <td>" + ta.getGeneration() + "</td>");
+        // out.println(" <td>" + ta.getGeneration() + "</td>");
         // out.println(" <td>" + ta.getName() + "</td>");
         out.println("  </tr>");
       }
@@ -99,22 +101,34 @@ public class HomeServlet extends HttpServlet {
     }
     Random random = new Random();
     dataStore.incrementCurrentGeneration();
+    // for (int i = DataStore.PARENT_SIZE; i < DataStore.PARENT_SIZE + 100; i++)
+    // {
+    // TravelAgent clone = new
+    // TravelAgent(travelAgentList.get(random.nextInt(5)));
+    // travelAgentList.set(i, clone);
+    // }
     for (int i = DataStore.PARENT_SIZE; i < DataStore.POPULATION_SIZE; i++) {
       int momP = pickParent(random);
       int dadP = pickParent(random);
       TravelAgent mom = travelAgentList.get(momP);
       TravelAgent dad = travelAgentList.get(dadP);
-      int tooManyTimes = 0;
-      while (mom.areSignaturesEqual(dad) || mom.getTotalTravelTime() == dad.getTotalTravelTime()) {
-        dadP = pickParent(random);
-        dad = travelAgentList.get(dadP);
-        tooManyTimes++;
-        if (tooManyTimes > 1000) {
-          // give up!
-          break;
-        }
+      // int tooManyTimes = 0;
+      // while (mom.areSignaturesEqual(dad) || mom.getTotalTravelTime() ==
+      // dad.getTotalTravelTime()) {
+      // dadP = pickParent(random);
+      // dad = travelAgentList.get(dadP);
+      // tooManyTimes++;
+      // if (tooManyTimes > 1000) {
+      // // give up!
+      // break;
+      // }
+      // }
+      TravelAgent child;
+      if (mom.areSignaturesEqual(dad) || mom.getTotalTravelTime() == dad.getTotalTravelTime()) {
+        child = new TravelAgent(mom);
+      } else {
+        child = new TravelAgent(mom, dad, makeName(i));
       }
-      TravelAgent child = new TravelAgent(mom, dad, makeName(i));
       if (!signatureSet.contains(child.getSignature())) {
         travelAgentList.set(i, child);
         signatureSet.add(child.getSignature());
