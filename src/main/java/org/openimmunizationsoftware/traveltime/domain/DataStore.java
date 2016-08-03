@@ -13,25 +13,47 @@ import org.openimmunizationsoftware.traveltime.logic.TripBuilderType;
 
 public class DataStore {
   private Map<String, Destination> destinationMap = new HashMap<String, Destination>();
-  private int currentGeneration = 1;
+  private int currentGeneration = 0;
   private List<TravelAgent> travelAgentList = new ArrayList<TravelAgent>();
   private Set<String> signatureSet = new HashSet<String>();
   private TripBuilderInterface tripBuilder = null;
+  private boolean started = false;
+  private TripBuilderType tripBuilderType = TripBuilderType.CONTINOUS;
+  private int populationSize = 0;
+  private int parentSize = 0;
+
+  public int getPopulationSize() {
+    return populationSize;
+  }
+
+  public void setPopulationSize(int populationSize) {
+    this.populationSize = populationSize;
+  }
+
+  public int getParentSize() {
+    return parentSize;
+  }
+
+  public void setParentSize(int parentSize) {
+    this.parentSize = parentSize;
+  }
+
+  public boolean isStarted() {
+    return started;
+  }
+
+  public void setStarted(boolean started) {
+    this.started = started;
+  }
 
   public TripBuilderInterface getTripBuilder() {
+    if (tripBuilder == null) {
+      tripBuilder = TripBuilderFactory.getTripBuilder(tripBuilderType);
+    }
     return tripBuilder;
   }
 
-  public void setTripBuilder(TripBuilderInterface tripBuilder) {
-    this.tripBuilder = tripBuilder;
-  }
-
   public DataStore() {
-    this(TripBuilderFactory.getTripBuilder(TRIP_BUILDER_TYPE));
-  }
-
-  public DataStore(TripBuilderInterface tripBuilder) {
-    this.tripBuilder = tripBuilder;
   }
 
   public Set<String> getSignatureSet() {
@@ -40,7 +62,15 @@ public class DataStore {
 
   public static final int POPULATION_SIZE = 50000;
   public static final int PARENT_SIZE = 25000;
-  public static final TripBuilderType TRIP_BUILDER_TYPE = TripBuilderType.CONTINOUS;
+
+
+  public TripBuilderType getTripBuilderType() {
+    return tripBuilderType;
+  }
+
+  public void setTripBuilderType(TripBuilderType tripBuilderType) {
+    this.tripBuilderType = tripBuilderType;
+  }
 
   public List<TravelAgent> getTravelAgentList() {
     return travelAgentList;

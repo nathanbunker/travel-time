@@ -44,46 +44,92 @@ public class HomeServlet extends HttpServlet {
       out.println(" <link rel=\"stylesheet\" type=\"text/css\" href=\"index.css\">");
       out.println("  </head>");
       out.println("  <body>");
+      String action = req.getParameter("action");
+      TripBuilderType tripBuilderType = TripBuilderType.CONTINOUS;
       DataStore dataStore = (DataStore) session.getAttribute("dataStore");
+      int count = 20;
+      int populationSize = DataStore.POPULATION_SIZE;
+      int parentSize = DataStore.PARENT_SIZE;
       if (dataStore == null) {
         dataStore = new DataStore();
-        setupDataStore(dataStore);
         session.setAttribute("dataStore", dataStore);
-        for (int i = 0; i < DataStore.POPULATION_SIZE; i++) {
-          dataStore.getTravelAgentList().add(new TravelAgent(dataStore, makeName(i)));
-          Collections.sort(dataStore.getTravelAgentList());
+      } else if (action != null) {
+        if (action.equals("Start")) {
+          tripBuilderType = TripBuilderType.valueOf(req.getParameter("tripBuilderType"));
+          dataStore.setTripBuilderType(tripBuilderType);
+          populationSize = Integer.parseInt(req.getParameter("populationSize"));
+          dataStore.setPopulationSize(populationSize);
+          parentSize = Integer.parseInt(req.getParameter("parentSize"));
+          dataStore.setParentSize(parentSize);
+          setupDataStore(dataStore);
+          for (int i = 0; i < populationSize; i++) {
+            dataStore.getTravelAgentList().add(new TravelAgent(dataStore, makeName(i)));
+            Collections.sort(dataStore.getTravelAgentList());
+          }
+          dataStore.setStarted(true);
+        } else if (action.equals("Next")) {
+          count = Integer.parseInt(req.getParameter("count"));
+          for (int i = 0; i < count; i++) {
+            generateNextGeneration(dataStore);
+          }
         }
+      }
+
+      out.println("<h3>Travel Time Project</h3>");
+      out.println("<form action=\"home\">");
+      if (dataStore.isStarted()) {
+        out.println("  Trip Builder Type :" + dataStore.getTripBuilderType() + "<br/>");
+        out.println("  Count <input type=\"text\" name=\"count\" value=\"" + count + "\">");
+        out.println("  <input type=\"submit\" name=\"action\" value=\"Next\">");
       } else {
-        for (int i = 0; i < 20; i++) {
-          generateNextGeneration(dataStore);
+        if (tripBuilderType == TripBuilderType.CONTINOUS) {
+          out.println("  Trip Builder Type <input type=\"radio\" name=\"tripBuilderType\" value=\""
+              + TripBuilderType.CONTINOUS + "\" checked=\"true\"> Continuous");
+        } else {
+          out.println("  Trip Builder Type <input type=\"radio\" name=\"tripBuilderType\" value=\""
+              + TripBuilderType.CONTINOUS + "\"> Continuous");
+
         }
+        if (tripBuilderType == TripBuilderType.DISCONNECTED) {
+          out.println("  <input type=\"radio\" name=\"tripBuilderType\" value=\"" + TripBuilderType.DISCONNECTED
+              + "\" checked=\"true\"> Disconnected<br/>");
+        } else {
+          out.println("  <input type=\"radio\" name=\"tripBuilderType\" value=\"" + TripBuilderType.DISCONNECTED
+              + "\"> Disconnected<br/>");
+        }
+        out.println(
+            "  Population Size <input type=\"text\" name=\"populationSize\" value=\"" + populationSize + "\"><br/>");
+        out.println("  Parent Size <input type=\"text\" name=\"parentSize\" value=\"" + parentSize + "\"><br/>");
+        out.println("  <input type=\"submit\" name=\"action\" value=\"Start\">");
       }
-
-      out.println("<h3>Top 30</h3>");
-      out.println("<table>");
-      out.println("  <tr>");
-      out.println("    <th>Pos</th>");
-      out.println("    <th>Signature</th>");
-      out.println("    <th>Total Time</th>");
-      // out.println(" <th>Generation</th>");
-      // out.println(" <th>Name</th>");
-      out.println("  </tr>");
-      for (int i = 0; i < 30; i++) {
-        List<TravelAgent> travelAgentList = dataStore.getTravelAgentList();
-        TravelAgent ta = travelAgentList.get(i);
+      out.println("</form>");
+      if (dataStore.isStarted()) {
+        out.println("<h3>Generation " + dataStore.getCurrentGeneration() + "</h3>");
+        out.println("<table>");
         out.println("  <tr>");
-        out.println("    <td>" + i + "</td>");
-        out.println("    <td>" + ta.getSignature() + "</td>");
-        out.println("    <td>" + ta.getTotalTravelTime() + "</td>");
-        // out.println(" <td>" + ta.getGeneration() + "</td>");
-        // out.println(" <td>" + ta.getName() + "</td>");
+        out.println("    <th>Pos</th>");
+        out.println("    <th>Signature</th>");
+        out.println("    <th>Total Time</th>");
+        // out.println(" <th>Generation</th>");
+        // out.println(" <th>Name</th>");
         out.println("  </tr>");
-      }
-      out.println("</table>");
+        for (int i = 0; i < 10; i++) {
+          List<TravelAgent> travelAgentList = dataStore.getTravelAgentList();
+          TravelAgent ta = travelAgentList.get(i);
+          out.println("  <tr>");
+          out.println("    <td>" + i + "</td>");
+          out.println("    <td>" + ta.getSignature() + "</td>");
+          out.println("    <td>" + ta.getTotalTravelTime() + "</td>");
+          // out.println(" <td>" + ta.getGeneration() + "</td>");
+          // out.println(" <td>" + ta.getName() + "</td>");
+          out.println("  </tr>");
+        }
+        out.println("</table>");
 
-      out.println("<h3>Best</h3>");
-      dataStore.getTravelAgentList().get(0).printSchedule(out);
-      printDestinationTable(out, dataStore);
+        out.println("<h3>Best</h3>");
+        dataStore.getTravelAgentList().get(0).printSchedule(out);
+        printDestinationTable(out, dataStore);
+      }
       out.println("</body>");
       out.println("</html>");
 
@@ -107,9 +153,9 @@ public class HomeServlet extends HttpServlet {
     // TravelAgent(travelAgentList.get(random.nextInt(5)));
     // travelAgentList.set(i, clone);
     // }
-    for (int i = DataStore.PARENT_SIZE; i < DataStore.POPULATION_SIZE; i++) {
-      int momP = pickParent(random);
-      int dadP = pickParent(random);
+    for (int i = dataStore.getParentSize(); i < dataStore.getPopulationSize(); i++) {
+      int momP = pickParent(random, dataStore);
+      int dadP = pickParent(random, dataStore);
       TravelAgent mom = travelAgentList.get(momP);
       TravelAgent dad = travelAgentList.get(dadP);
       // int tooManyTimes = 0;
@@ -139,15 +185,15 @@ public class HomeServlet extends HttpServlet {
 
   private static final boolean GAUSIAN = false;
 
-  private int pickParent(Random random) {
+  private int pickParent(Random random, DataStore dataStore) {
     if (GAUSIAN) {
-      int pickParent = (int) (Math.abs(random.nextGaussian()) * ((double) DataStore.PARENT_SIZE * 0.7));
-      if (pickParent >= DataStore.PARENT_SIZE) {
-        pickParent = DataStore.PARENT_SIZE;
+      int pickParent = (int) (Math.abs(random.nextGaussian()) * ((double) dataStore.getParentSize() * 0.7));
+      if (pickParent >= dataStore.getParentSize()) {
+        pickParent = dataStore.getParentSize();
       }
       return pickParent;
     } else {
-      return random.nextInt(DataStore.PARENT_SIZE);
+      return random.nextInt(dataStore.getParentSize());
     }
   }
 
