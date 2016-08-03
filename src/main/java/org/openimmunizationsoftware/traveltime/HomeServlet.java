@@ -54,7 +54,7 @@ public class HomeServlet extends HttpServlet {
           Collections.sort(dataStore.getTravelAgentList());
         }
       } else {
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < 20; i++) {
           generateNextGeneration(dataStore);
         }
       }

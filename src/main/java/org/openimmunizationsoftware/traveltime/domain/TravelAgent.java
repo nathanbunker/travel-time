@@ -111,7 +111,7 @@ public class TravelAgent implements Comparable<TravelAgent> {
       if (trip.getTripStopList().size() > 0) {
         {
           TripStop tripStop = trip.getTripStopList().get(0);
-          out.println("<h3>" + tripStop.getDestination() + "</h3>");
+          out.println("<h3>Week " + tripId + ": Start week in " + tripStop.getDestination().getCityName() + "</h3>");
         }
         out.println("<table>");
         out.println("  <tr>");
