@@ -70,13 +70,17 @@ public class TripBuilderContinuous implements TripBuilderInterface {
       trip.add(tsp);
 
     }
-    TravelTime tt = new TravelTime();
-    tt.setDestination1(trip.getTripStopList().get(0).getDestination());
-    tt.setDestination2(tsp.getDestination());
-
-    trip.addTotalTime(tt.getTime());
-    //trip.addTotalTime(7); // Time to get home
+    loopBackIn(tripList.get(0), tsp);
     return tripList;
+  }
+
+  private static void loopBackIn(Trip trip, TripStop tsp) {
+    TripStop tspFirst = trip.getTripStopList().get(0);
+    TravelTime tt = tsp.getDestination().getTravelTimeMap().get(tspFirst.getDestination());
+    tspFirst.setTravelTime(tt);
+    tspFirst.setDescription("Leave from " + tsp.getDestination().getCityName() + " and arrive at "
+        + tspFirst.getDestination().getCityName() + " by " + tspFirst.getHourDisplay() + ".");
+    trip.addTotalTime(tt.getTime());
   }
 
   private static Trip createTrip(List<Trip> tripList, String generation) {
@@ -130,7 +134,7 @@ public class TripBuilderContinuous implements TripBuilderInterface {
         tsp = new TripStop();
         tsp.setDestination(d2);
         TravelTime tt = new TravelTime();
-        tt.setTime(8);
+        tt.setTime(0);
         tsp.setDay("Tuesday");
         tsp.setHour(9);
         tsp.setTravelTime(tt);
@@ -189,7 +193,7 @@ public class TripBuilderContinuous implements TripBuilderInterface {
         }
       }
     }
-    trip.addTotalTime(7); // Time to get home
+    loopBackIn(tripList.get(0), tsp);
     return tripList;
 
   }
@@ -261,9 +265,8 @@ public class TripBuilderContinuous implements TripBuilderInterface {
         trip.addTotalTime(tsp.getTravelTime().getTime());
       }
       trip.add(tsp);
-
     }
-    //trip.addTotalTime(7); // Time to get home
+    loopBackIn(tripList.get(0), tsp);
     return tripList;
   }
 
