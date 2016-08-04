@@ -229,7 +229,7 @@ public class HomeServlet extends HttpServlet {
 
   private void setupDataStore(DataStore dataStore) throws IOException {
     {
-      Reader in = new InputStreamReader(HomeServlet.class.getResourceAsStream("/travel-times.csv"));
+      Reader in = new InputStreamReader(HomeServlet.class.getResourceAsStream("/travel-times-original.csv"));
       CSVParser parser = new CSVParser(in, CSVFormat.EXCEL);
       List<CSVRecord> list = parser.getRecords();
 
