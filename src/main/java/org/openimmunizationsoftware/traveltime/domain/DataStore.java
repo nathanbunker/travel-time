@@ -25,6 +25,7 @@ public class DataStore {
   private List<Destination> destinationList = null;
   private TravelAgent travelAgentChristofides = null;
   private List<Float> totalTimeHistory = new ArrayList<Float>();
+  public static String[] SOURCES = new String[] {"travel-times-original.csv", "travel-times.csv", "US48.csv"};
   
 
   public List<Float> getTotalTimeHistory() {
@@ -87,8 +88,8 @@ public class DataStore {
     return signatureSet;
   }
 
-  public static final int POPULATION_SIZE = 50000;
-  public static final int PARENT_SIZE = 25000;
+  public static final int POPULATION_SIZE = 5000;
+  public static final int PARENT_SIZE = 2500;
 
   public TripBuilderType getTripBuilderType() {
     return tripBuilderType;

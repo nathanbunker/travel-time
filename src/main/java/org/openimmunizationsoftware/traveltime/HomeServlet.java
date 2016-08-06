@@ -63,14 +63,16 @@ public class HomeServlet extends HttpServlet {
           dataStore.setPopulationSize(populationSize);
           parentSize = Integer.parseInt(req.getParameter("parentSize"));
           dataStore.setParentSize(parentSize);
-          setupDataStore(dataStore);
+          int sourceId = Integer.parseInt(req.getParameter("sourceId"));
+          setupDataStore(dataStore, "/" + dataStore.SOURCES[sourceId]);
+
           Christofides ch = new Christofides(false);
           int[] shortestPath = ch.solve(ChristofidesManager.getManager().readDistanceMatrix(dataStore));
           {
             List<Destination> destinationList = dataStore.getDestinationList();
             List<Destination> destinationListInitial = new ArrayList<Destination>();
             for (int i = 0; i < shortestPath.length; i++) {
-              destinationListInitial.add(destinationList.get(i));
+              destinationListInitial.add(destinationList.get(shortestPath[i]));
             }
             TravelAgent travelAgent = new TravelAgent(dataStore, destinationListInitial);
             dataStore.getTravelAgentList().add(travelAgent);
@@ -88,6 +90,9 @@ public class HomeServlet extends HttpServlet {
             generateNextGeneration(dataStore);
             dataStore.getTotalTimeHistory().add(dataStore.getTravelAgentList().get(0).getTotalTravelTime());
           }
+        } else if (action.equals("Clear")) {
+          dataStore = new DataStore();
+          session.setAttribute("dataStore", dataStore);
         }
       }
 
@@ -97,6 +102,7 @@ public class HomeServlet extends HttpServlet {
         out.println("  Trip Builder Type :" + dataStore.getTripBuilderType() + "<br/>");
         out.println("  Count <input type=\"text\" name=\"count\" value=\"" + count + "\">");
         out.println("  <input type=\"submit\" name=\"action\" value=\"Next\">");
+        out.println("  <input type=\"submit\" name=\"action\" value=\"Clear\">");
       } else {
         if (tripBuilderType == TripBuilderType.CONTINOUS) {
           out.println("  Trip Builder Type <input type=\"radio\" name=\"tripBuilderType\" value=\""
@@ -104,7 +110,6 @@ public class HomeServlet extends HttpServlet {
         } else {
           out.println("  Trip Builder Type <input type=\"radio\" name=\"tripBuilderType\" value=\""
               + TripBuilderType.CONTINOUS + "\"> Continuous");
-
         }
         if (tripBuilderType == TripBuilderType.DISCONNECTED) {
           out.println("  <input type=\"radio\" name=\"tripBuilderType\" value=\"" + TripBuilderType.DISCONNECTED
@@ -113,6 +118,11 @@ public class HomeServlet extends HttpServlet {
           out.println("  <input type=\"radio\" name=\"tripBuilderType\" value=\"" + TripBuilderType.DISCONNECTED
               + "\"> Disconnected<br/>");
         }
+        out.println("  Source File<select name=\"sourceId\">");
+        for (int sourceId = 0; sourceId < DataStore.SOURCES.length; sourceId++) {
+          out.println("    <option value=\"" + sourceId + "\">" + DataStore.SOURCES[sourceId] + "</option>");
+        }
+        out.println("  </select><br/>");
         out.println(
             "  Population Size <input type=\"text\" name=\"populationSize\" value=\"" + populationSize + "\"><br/>");
         out.println("  Parent Size <input type=\"text\" name=\"parentSize\" value=\"" + parentSize + "\"><br/>");
@@ -147,25 +157,44 @@ public class HomeServlet extends HttpServlet {
         out.println("    <th>Score</th>");
         out.println("    <th>Graph</th>");
         out.println("  </tr>");
+        double scale = 1.0;
         {
           TravelAgent travelAgentChristofides = dataStore.getTravelAgentChristofides();
           float f = travelAgentChristofides.getTotalTravelTime();
+          scale = 600 / f;
           out.println("  <tr>");
           out.println("    <td>Upper</td>");
           out.println("    <td>" + f + "</td>");
-          out.println(
-              "    <td><div style=\"width: " + ((int) (f + 0.5)) + "px; background-color: red;\">--</div></td>");
+          out.println("    <td><div style=\"width: " + ((int) (f * scale + 0.5))
+              + "px; background-color: red;\">--</div></td>");
           out.println("  </tr>");
         }
-        int generation = 0;
-        for (Float f : dataStore.getTotalTimeHistory()) {
-          out.println("  <tr>");
-          out.println("    <td>" + generation + "</td>");
-          out.println("    <td>" + f + "</td>");
-          out.println(
-              "    <td><div style=\"width: " + ((int) (f + 0.5)) + "px; background-color: lightblue;\">--</div></td>");
-          out.println("  </tr>");
-          generation++;
+        {
+          int totalSize = dataStore.getTotalTimeHistory().size();
+          for (int generation = 0; generation < totalSize;) {
+            float f = dataStore.getTotalTimeHistory().get(generation);
+            out.println("  <tr>");
+            out.println("    <td>" + generation + "</td>");
+            out.println("    <td>" + f + "</td>");
+            out.println("    <td><div style=\"width: " + ((int) (f * scale + 0.5))
+                + "px; background-color: lightblue;\">--</div></td>");
+            out.println("  </tr>");
+            if ((generation + 1) == totalSize) {
+              break;
+            }
+            if (generation < 40) {
+              generation++;
+            } else if (generation < 200) {
+              generation += 5;
+            } else if (generation < 500) {
+              generation += 10;
+            } else {
+              generation += 20;
+            }
+            if (generation >= totalSize) {
+              generation = totalSize - 1;
+            }
+          }
         }
         {
           TravelAgent travelAgentChristofides = dataStore.getTravelAgentChristofides();
@@ -173,8 +202,8 @@ public class HomeServlet extends HttpServlet {
           out.println("  <tr>");
           out.println("    <td>Lower</td>");
           out.println("    <td>" + f + "</td>");
-          out.println(
-              "    <td><div style=\"width: " + ((int) (f + 0.5)) + "px; background-color: red;\">--</div></td>");
+          out.println("    <td><div style=\"width: " + ((int) (f * scale + 0.5))
+              + "px; background-color: red;\">--</div></td>");
           out.println("  </tr>");
         }
         out.println("</table>");
@@ -279,9 +308,9 @@ public class HomeServlet extends HttpServlet {
     out.println("</table>");
   }
 
-  private void setupDataStore(DataStore dataStore) throws IOException {
+  private void setupDataStore(DataStore dataStore, String source) throws IOException {
     {
-      Reader in = new InputStreamReader(HomeServlet.class.getResourceAsStream("/travel-times-original.csv"));
+      Reader in = new InputStreamReader(HomeServlet.class.getResourceAsStream(source));
       CSVParser parser = new CSVParser(in, CSVFormat.EXCEL);
       List<CSVRecord> list = parser.getRecords();
 
