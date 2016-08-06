@@ -230,13 +230,13 @@ public class HomeServlet extends HttpServlet {
     }
     Random random = new Random();
     dataStore.incrementCurrentGeneration();
-    // for (int i = DataStore.PARENT_SIZE; i < DataStore.PARENT_SIZE + 100; i++)
-    // {
-    // TravelAgent clone = new
-    // TravelAgent(travelAgentList.get(random.nextInt(5)));
-    // travelAgentList.set(i, clone);
-    // }
-    for (int i = dataStore.getParentSize(); i < dataStore.getPopulationSize(); i++) {
+     for (int i = DataStore.PARENT_SIZE; i < DataStore.PARENT_SIZE + 100; i++)
+     {
+     TravelAgent clone = new
+     TravelAgent(travelAgentList.get(random.nextInt(5)));
+     travelAgentList.set(i, clone);
+     }
+    for (int i = dataStore.getParentSize() + 100; i < dataStore.getPopulationSize(); i++) {
       int momP = pickParent(random, dataStore);
       int dadP = pickParent(random, dataStore);
       TravelAgent mom = travelAgentList.get(momP);
