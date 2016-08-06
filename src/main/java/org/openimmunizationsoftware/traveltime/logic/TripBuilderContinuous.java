@@ -1,7 +1,6 @@
 package org.openimmunizationsoftware.traveltime.logic;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -13,6 +12,20 @@ import org.openimmunizationsoftware.traveltime.domain.Trip;
 import org.openimmunizationsoftware.traveltime.domain.TripStop;
 
 public class TripBuilderContinuous implements TripBuilderInterface {
+  
+  @Override
+  public List<Trip> makeTrip(DataStore dataStore, List<Destination> destinationList) {
+    List<Trip> tripList = new ArrayList<Trip>();
+    Bag bag = new Bag();
+
+    for (Destination d2 : destinationList)
+    {
+      addDestination(tripList, "1", bag, d2);
+    }
+    loopBackIn(tripList.get(0), bag.tsp);
+    return tripList;
+  }
+  
   public List<Trip> makeTrip(DataStore dataStore) {
     List<Trip> tripList = new ArrayList<Trip>();
     Random random = new Random();
@@ -20,58 +33,66 @@ public class TripBuilderContinuous implements TripBuilderInterface {
     setupTrips(tripList, random, destinationsNotVisitedList, "1");
     return tripList;
   }
+  
+  private static class Bag
+  {
+    Trip trip = null;
+    TripStop tsp = null;
+  }
 
   private static List<Trip> setupTrips(List<Trip> tripList, Random random, List<Destination> destinationsNotVisitedList,
       String generation) {
-    Trip trip = null;
-    TripStop tsp = null;
+    Bag bag = new Bag();
     while (destinationsNotVisitedList.size() > 0) {
       Destination d2 = getNextDestinationNotVisited(random, destinationsNotVisitedList);
-      if (trip == null) {
-        trip = createTrip(tripList, generation);
-        tsp = new TripStop();
-        tsp.setDestination(d2);
-        TravelTime tt = new TravelTime();
-        tt.setTime(0);
-        tsp.setDay("Tuesday");
-        tsp.setHour(9);
-        tsp.setTravelTime(tt);
-        tsp.setDescription("Leave home Monday and arrive at " + tsp.getDestination().getCityName() + " by "
-            + tsp.getHourDisplay() + ".");
-      } else {
-        TripStop tspPrev = tsp;
-        tsp = new TripStop();
-        tsp.setDestination(d2);
-        tsp.setDay(tspPrev.getDay());
-        tsp.setHour(tspPrev.getHour());
-        tsp.addTime(5);
-        String description = "Leave " + tspPrev.getDestination().getCityName() + " by " + tsp.getHourDisplay() + ". ";
-        TravelTime tt = tspPrev.getDestination().getTravelTimeMap().get(d2);
-        if (tt == null) {
-          tt = new TravelTime();
-          tt.setDestination1(tspPrev.getDestination());
-          tt.setDestination2(d2);
-          tt.setTime(8);
-          description += "Take travel day. ";
-        } else {
-          description += "Expect " + tt.getTime() + " hours of travel. ";
-        }
-        tsp.setTravelTime(tt);
-        tsp.addTime(tt.getTime());
-        tsp.setToNextWorkingDay();
-        description += "Arrive in " + tsp.getDestination().getCityName() + " and meet with "
-            + tsp.getDestination().getShortName() + " " + tsp.getHourDisplay() + ".";
-        tsp.setDescription(description);
-        if (tsp.weekAfter(tspPrev)) {
-          trip = createTrip(tripList, generation);
-        }
-        trip.addTotalTime(tsp.getTravelTime().getTime());
-      }
-      trip.add(tsp);
-
+      addDestination(tripList, generation, bag, d2);
     }
-    loopBackIn(tripList.get(0), tsp);
+    loopBackIn(tripList.get(0), bag.tsp);
     return tripList;
+  }
+
+  private static void addDestination(List<Trip> tripList, String generation, Bag bag, Destination d2) {
+    if (bag.trip == null) {
+      bag.trip = createTrip(tripList, generation);
+      bag.tsp = new TripStop();
+      bag.tsp.setDestination(d2);
+      TravelTime tt = new TravelTime();
+      tt.setTime(0);
+      bag.tsp.setDay("Tuesday");
+      bag.tsp.setHour(9);
+      bag.tsp.setTravelTime(tt);
+      bag.tsp.setDescription("Leave home Monday and arrive at " + bag.tsp.getDestination().getCityName() + " by "
+          + bag.tsp.getHourDisplay() + ".");
+    } else {
+      TripStop tspPrev = bag.tsp;
+      bag.tsp = new TripStop();
+      bag.tsp.setDestination(d2);
+      bag.tsp.setDay(tspPrev.getDay());
+      bag.tsp.setHour(tspPrev.getHour());
+      bag.tsp.addTime(5);
+      String description = "Leave " + tspPrev.getDestination().getCityName() + " by " + bag.tsp.getHourDisplay() + ". ";
+      TravelTime tt = tspPrev.getDestination().getTravelTimeMap().get(d2);
+      if (tt == null) {
+        tt = new TravelTime();
+        tt.setDestination1(tspPrev.getDestination());
+        tt.setDestination2(d2);
+        tt.setTime(8);
+        description += "Take travel day. ";
+      } else {
+        description += "Expect " + tt.getTime() + " hours of travel. ";
+      }
+      bag.tsp.setTravelTime(tt);
+      bag.tsp.addTime(tt.getTime());
+      bag.tsp.setToNextWorkingDay();
+      description += "Arrive in " + bag.tsp.getDestination().getCityName() + " and meet with "
+          + bag.tsp.getDestination().getShortName() + " " + bag.tsp.getHourDisplay() + ".";
+      bag.tsp.setDescription(description);
+      if (bag.tsp.weekAfter(tspPrev)) {
+        bag.trip = createTrip(tripList, generation);
+      }
+      bag.trip.addTotalTime(bag.tsp.getTravelTime().getTime());
+    }
+    bag.trip.add(bag.tsp);
   }
 
   private static void loopBackIn(Trip trip, TripStop tsp) {

@@ -21,6 +21,8 @@ import javax.servlet.http.HttpSession;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
+import org.openimmunizationsoftware.traveltime.christofides.Christofides;
+import org.openimmunizationsoftware.traveltime.christofides.ChristofidesManager;
 import org.openimmunizationsoftware.traveltime.domain.DataStore;
 import org.openimmunizationsoftware.traveltime.domain.Destination;
 import org.openimmunizationsoftware.traveltime.domain.TravelAgent;
@@ -62,15 +64,29 @@ public class HomeServlet extends HttpServlet {
           parentSize = Integer.parseInt(req.getParameter("parentSize"));
           dataStore.setParentSize(parentSize);
           setupDataStore(dataStore);
-          for (int i = 0; i < populationSize; i++) {
-            dataStore.getTravelAgentList().add(new TravelAgent(dataStore, makeName(i)));
+          Christofides ch = new Christofides(false);
+          int[] shortestPath = ch.solve(ChristofidesManager.getManager().readDistanceMatrix(dataStore));
+          {
+            List<Destination> destinationList = dataStore.getDestinationList();
+            List<Destination> destinationListInitial = new ArrayList<Destination>();
+            for (int i = 0; i < shortestPath.length; i++) {
+              destinationListInitial.add(destinationList.get(i));
+            }
+            TravelAgent travelAgent = new TravelAgent(dataStore, destinationListInitial);
+            dataStore.getTravelAgentList().add(travelAgent);
+            dataStore.setTravelAgentChristofides(travelAgent);
+          }
+          for (int i = 1; i < populationSize; i++) {
+            dataStore.getTravelAgentList().add(new TravelAgent(dataStore));
             Collections.sort(dataStore.getTravelAgentList());
           }
           dataStore.setStarted(true);
+          dataStore.getTotalTimeHistory().add(dataStore.getTravelAgentList().get(0).getTotalTravelTime());
         } else if (action.equals("Next")) {
           count = Integer.parseInt(req.getParameter("count"));
           for (int i = 0; i < count; i++) {
             generateNextGeneration(dataStore);
+            dataStore.getTotalTimeHistory().add(dataStore.getTravelAgentList().get(0).getTotalTravelTime());
           }
         }
       }
@@ -110,8 +126,6 @@ public class HomeServlet extends HttpServlet {
         out.println("    <th>Pos</th>");
         out.println("    <th>Signature</th>");
         out.println("    <th>Total Time</th>");
-        // out.println(" <th>Generation</th>");
-        // out.println(" <th>Name</th>");
         out.println("  </tr>");
         for (int i = 0; i < 10; i++) {
           List<TravelAgent> travelAgentList = dataStore.getTravelAgentList();
@@ -120,14 +134,53 @@ public class HomeServlet extends HttpServlet {
           out.println("    <td>" + i + "</td>");
           out.println("    <td>" + ta.getSignature() + "</td>");
           out.println("    <td>" + ta.getTotalTravelTime() + "</td>");
-          // out.println(" <td>" + ta.getGeneration() + "</td>");
-          // out.println(" <td>" + ta.getName() + "</td>");
           out.println("  </tr>");
         }
         out.println("</table>");
 
         out.println("<h3>Best</h3>");
         dataStore.getTravelAgentList().get(0).printSchedule(out);
+        out.println("<h3>Best Score History</h3>");
+        out.println("<table>");
+        out.println("  <tr>");
+        out.println("    <th>Generation</th>");
+        out.println("    <th>Score</th>");
+        out.println("    <th>Graph</th>");
+        out.println("  </tr>");
+        {
+          TravelAgent travelAgentChristofides = dataStore.getTravelAgentChristofides();
+          float f = travelAgentChristofides.getTotalTravelTime();
+          out.println("  <tr>");
+          out.println("    <td>Upper</td>");
+          out.println("    <td>" + f + "</td>");
+          out.println(
+              "    <td><div style=\"width: " + ((int) (f + 0.5)) + "px; background-color: red;\">--</div></td>");
+          out.println("  </tr>");
+        }
+        int generation = 0;
+        for (Float f : dataStore.getTotalTimeHistory()) {
+          out.println("  <tr>");
+          out.println("    <td>" + generation + "</td>");
+          out.println("    <td>" + f + "</td>");
+          out.println(
+              "    <td><div style=\"width: " + ((int) (f + 0.5)) + "px; background-color: lightblue;\">--</div></td>");
+          out.println("  </tr>");
+          generation++;
+        }
+        {
+          TravelAgent travelAgentChristofides = dataStore.getTravelAgentChristofides();
+          float f = travelAgentChristofides.getTotalTravelTime() * 2 / 3;
+          out.println("  <tr>");
+          out.println("    <td>Lower</td>");
+          out.println("    <td>" + f + "</td>");
+          out.println(
+              "    <td><div style=\"width: " + ((int) (f + 0.5)) + "px; background-color: red;\">--</div></td>");
+          out.println("  </tr>");
+        }
+        out.println("</table>");
+        out.println("<h3>Christofides</h3>");
+        dataStore.getTravelAgentChristofides().printSchedule(out);
+        out.println("<br/>");
         printDestinationTable(out, dataStore);
       }
       out.println("</body>");
@@ -198,8 +251,7 @@ public class HomeServlet extends HttpServlet {
   }
 
   private void printDestinationTable(PrintWriter out, DataStore dataStore) {
-    List<Destination> destinationList = new ArrayList<Destination>(dataStore.getDestinationMap().values());
-    Collections.sort(destinationList);
+    List<Destination> destinationList = dataStore.getDestinationList();
     out.println("<table>");
     out.println("  <tr>");
     out.println("    <th>Short Name</th>");

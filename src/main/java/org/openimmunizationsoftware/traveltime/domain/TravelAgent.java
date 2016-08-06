@@ -15,11 +15,6 @@ public class TravelAgent implements Comparable<TravelAgent> {
   private DataStore dataStore = null;
   private String generation = "1";
   private String signature = "";
-  private String name = "";
-
-  public String getName() {
-    return name;
-  }
 
   public String getSignature() {
     return signature;
@@ -59,9 +54,14 @@ public class TravelAgent implements Comparable<TravelAgent> {
     return otherAgent.signature.equals(signature);
   }
 
-  public TravelAgent(DataStore dataStore, String name) {
+  public TravelAgent(DataStore dataStore, List<Destination> destinationList) {
     this.dataStore = dataStore;
-    // this.name = name;
+    tripList = dataStore.getTripBuilder().makeTrip(dataStore, destinationList);
+    calculateTotalTime();
+  }
+
+  public TravelAgent(DataStore dataStore) {
+    this.dataStore = dataStore;
     tripList = dataStore.getTripBuilder().makeTrip(dataStore);
     calculateTotalTime();
   }
@@ -80,10 +80,10 @@ public class TravelAgent implements Comparable<TravelAgent> {
     for (TripStop tripStop : trip.getTripStopList()) {
       if (first) {
         signature += tripStop.getDestination().getShortName();
-      }
-      {
+      } else {
         signature += "-" + tripStop.getDestination().getShortName();
       }
+      first = false;
     }
   }
 
@@ -105,25 +105,23 @@ public class TravelAgent implements Comparable<TravelAgent> {
   public void printSchedule(PrintWriter out) {
     out.println("<p>Total Travel Time = " + totalTravelTime + "<br/>Average Travel Time: "
         + (totalTravelTime / dataStore.getDestinationMap().size()) + "</p>");
+    out.println("<table>");
+    out.println("  <tr>");
+    out.println("    <th>Week</th>");
+    out.println("    <th>Day</th>");
+    out.println("    <th>Time</th>");
+    out.println("    <th>Site</th>");
+    out.println("    <th>City</th>");
+    out.println("    <th>Travel Time</th>");
+    out.println("    <th>Description</th>");
+    out.println("  </tr>");
     int tripId = 0;
     for (Trip trip : tripList) {
       tripId++;
       if (trip.getTripStopList().size() > 0) {
-        {
-          TripStop tripStop = trip.getTripStopList().get(0);
-          out.println("<h3>Week " + tripId + ": Start week in " + tripStop.getDestination().getCityName() + "</h3>");
-        }
-        out.println("<table>");
-        out.println("  <tr>");
-        out.println("    <th>Day</th>");
-        out.println("    <th>Time</th>");
-        out.println("    <th>Site</th>");
-        out.println("    <th>City</th>");
-        out.println("    <th>Travel Time</th>");
-        out.println("    <th>Description</th>");
-        out.println("  </tr>");
         for (TripStop tripStop : trip.getTripStopList()) {
           out.println("  <tr>");
+          out.println("    <td>" + tripId + "</td>");
           out.println("    <td>" + tripStop.getDay() + "</td>");
           out.println("    <td>" + tripStop.getHourDisplay() + "</td>");
           out.println("    <td>" + tripStop.getDestination().getShortName() + "</td>");
@@ -136,60 +134,8 @@ public class TravelAgent implements Comparable<TravelAgent> {
           out.println("    <td>" + tripStop.getDescription() + "</td>");
           out.println("  </tr>");
         }
-        out.println("  <tr>");
-        out.println("    <td colspan=\"3\"></td>");
-        out.println("    <td>Home</td>");
-        out.println("    <td>7</td>");
-        out.println("  </tr>");
-        out.println("  <tr>");
-        out.println("    <td colspan=\"3\"></td>");
-        out.println("    <td>Total Travel Time</td>");
-        out.println("    <td>" + trip.getTotalTime() + "</td>");
-        out.println("  </tr>");
-        out.println("  <tr>");
-        out.println("    <td colspan=\"3\"></td>");
-        out.println("    <td>Travel Score</td>");
-        NumberFormat numberFormat = NumberFormat.getNumberInstance();
-        out.println("    <td>" + numberFormat.format(trip.getTravelScore()) + "</td>");
-        out.println("  </tr>");
-        out.println("  <tr>");
-        out.println("    <td colspan=\"3\"></td>");
-        out.println("    <td>Generation</td>");
-        out.println("    <td>" + trip.getGeneration() + "</td>");
-        out.println("  </tr>");
-        out.println("</table>");
-        if (false) {
-          out.println("<div id=\"map" + tripId
-              + "\" style=\"height=100px; width=100px; border-size=\"1\" border-style: solid; border-color: black;\">Hello</div>Goodbye");
-          out.println("<script>");
-          out.println("function initMap" + tripId + "() {");
-          out.println("  var myLatLng = {lat: 32.72, lng: -65.370};");
-
-          out.println("  // Create a map object and specify the DOM element for display.");
-          out.println("  var map = new google.maps.Map(document.getElementById('map" + tripId + "'), {");
-          out.println("    center: myLatLng,");
-          out.println("    scrollwheel: false,");
-          out.println("    zoom: 3");
-          out.println("  });");
-
-          out.println("  // Create a marker and set its position.");
-          out.println("  var marker = new google.maps.Marker({");
-          out.println("    map: map,");
-          out.println("    position: myLatLng,");
-          out.println("    title: 'Hello World!'");
-          out.println("  });");
-          out.println("}");
-          out.println("</script>");
-          try {
-            out.println("<script async defer src=\"https://maps.googleapis.com/maps/api/js?key="
-                + URLEncoder.encode(GOOGLE_API_KEY, "UTF-8") + "&callback=initMap" + tripId
-                + "\" type=\"text/javascript\"></script>");
-          } catch (UnsupportedEncodingException use) {
-            // do nothing
-          }
-        }
-
       }
     }
+    out.println("</table>");
   }
 }

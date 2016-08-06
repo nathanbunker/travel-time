@@ -1,6 +1,7 @@
 package org.openimmunizationsoftware.traveltime.domain;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -21,6 +22,32 @@ public class DataStore {
   private TripBuilderType tripBuilderType = TripBuilderType.CONTINOUS;
   private int populationSize = 0;
   private int parentSize = 0;
+  private List<Destination> destinationList = null;
+  private TravelAgent travelAgentChristofides = null;
+  private List<Float> totalTimeHistory = new ArrayList<Float>();
+  
+
+  public List<Float> getTotalTimeHistory() {
+    return totalTimeHistory;
+  }
+
+  public TravelAgent getTravelAgentChristofides() {
+    return travelAgentChristofides;
+  }
+
+  public void setTravelAgentChristofides(TravelAgent travelAgentChristofides) {
+    this.travelAgentChristofides = travelAgentChristofides;
+  }
+
+  public List<Destination> getDestinationList() {
+    if (destinationList == null) {
+      synchronized (destinationMap) {
+        destinationList = new ArrayList<Destination>(destinationMap.values());
+        Collections.sort(destinationList);
+      }
+    }
+    return destinationList;
+  }
 
   public int getPopulationSize() {
     return populationSize;
@@ -62,7 +89,6 @@ public class DataStore {
 
   public static final int POPULATION_SIZE = 50000;
   public static final int PARENT_SIZE = 25000;
-
 
   public TripBuilderType getTripBuilderType() {
     return tripBuilderType;

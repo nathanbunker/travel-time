@@ -13,15 +13,24 @@ import org.openimmunizationsoftware.traveltime.domain.Trip;
 import org.openimmunizationsoftware.traveltime.domain.TripStop;
 
 public class TripBuilderDisconnected implements TripBuilderInterface {
-  public List<Trip> makeTrip(DataStore dataStore) {
+  
+  @Override
+  public List<Trip> makeTrip(DataStore dataStore, List<Destination> destinationList) {
     List<Trip> tripList = new ArrayList<Trip>();
-    Random random = new Random();
-    List<Destination> destinationsNotVisitedList = new ArrayList<Destination>(dataStore.getDestinationMap().values());
-    setupTrips(tripList, random, destinationsNotVisitedList, "1");
+    List<Destination> destinationsList = new ArrayList<Destination>(dataStore.getDestinationList());
+    setupTrips(tripList, null, destinationsList, "1");
     Collections.sort(tripList);
     return tripList;
   }
-
+  public List<Trip> makeTrip(DataStore dataStore) {
+    List<Trip> tripList = new ArrayList<Trip>();
+    Random random = new Random();
+    List<Destination> destinationsList = new ArrayList<Destination>(dataStore.getDestinationList());
+    setupTrips(tripList, random, destinationsList, "1");
+    Collections.sort(tripList);
+    return tripList;
+  }
+  
   private static List<Trip> setupTrips(List<Trip> tripList, Random random, List<Destination> destinationsNotVisitedList,
       String generation) {
     while (destinationsNotVisitedList.size() > 0) {
@@ -31,7 +40,7 @@ public class TripBuilderDisconnected implements TripBuilderInterface {
 
       TripStop tsp;
       {
-        int position = random.nextInt(destinationsNotVisitedList.size());
+        int position = random == null ? 0 : random.nextInt(destinationsNotVisitedList.size());
         Destination d1 = destinationsNotVisitedList.get(position);
         destinationsNotVisitedList.remove(position);
         TripStop tripStop = new TripStop();
@@ -64,8 +73,7 @@ public class TripBuilderDisconnected implements TripBuilderInterface {
           // if (position >= destinationsNotVisitedList.size()) {
           // position = destinationsNotVisitedList.size() - 1;
           // }
-          int position = random.nextInt(destinationsNotVisitedList.size());
-
+          int position = random == null ? 0 : random.nextInt(destinationsNotVisitedList.size());
           Destination dn = destinationsNotVisitedList.get(position);
           TravelTime travelTimeNext = tsp.getDestination().getTravelTimeMap().get(dn);
 
