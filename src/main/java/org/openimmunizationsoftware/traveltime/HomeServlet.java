@@ -163,7 +163,7 @@ public class HomeServlet extends HttpServlet {
           float f = travelAgentChristofides.getTotalTravelTime();
           scale = 600 / f;
           out.println("  <tr>");
-          out.println("    <td>Upper</td>");
+          out.println("    <td>No more than 50% longer than best solution</td>");
           out.println("    <td>" + f + "</td>");
           out.println("    <td><div style=\"width: " + ((int) (f * scale + 0.5))
               + "px; background-color: red;\">--</div></td>");
@@ -173,11 +173,12 @@ public class HomeServlet extends HttpServlet {
           int totalSize = dataStore.getTotalTimeHistory().size();
           for (int generation = 0; generation < totalSize;) {
             float f = dataStore.getTotalTimeHistory().get(generation);
+            double improvement = 1.0 - f / dataStore.getTravelAgentChristofides().getTotalTravelTime();
             out.println("  <tr>");
             out.println("    <td>" + generation + "</td>");
             out.println("    <td>" + f + "</td>");
             out.println("    <td><div style=\"width: " + ((int) (f * scale + 0.5))
-                + "px; background-color: lightblue;\">--</div></td>");
+                + "px; background-color: lightblue;\">" +((int) (100 * improvement + 0.5)) + "%</div></td>");
             out.println("  </tr>");
             if ((generation + 1) == totalSize) {
               break;
@@ -203,7 +204,7 @@ public class HomeServlet extends HttpServlet {
           out.println("    <td>Lower</td>");
           out.println("    <td>" + f + "</td>");
           out.println("    <td><div style=\"width: " + ((int) (f * scale + 0.5))
-              + "px; background-color: red;\">--</div></td>");
+              + "px; background-color: red;\">Lowest possible best solution</div></td>");
           out.println("  </tr>");
         }
         out.println("</table>");
