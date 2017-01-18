@@ -12,5 +12,4 @@ public interface TripBuilderInterface {
   public List<Trip> makeTrip(DataStore dataStore);
   public List<Trip> makeNewTripList(List<Trip> tripList1, List<Trip> tripList2, DataStore dataStore, String generation) ;
   public List<Trip> clone(TravelAgent travelAgent) ;
-
 }
