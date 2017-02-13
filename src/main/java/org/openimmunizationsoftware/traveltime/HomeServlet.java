@@ -309,7 +309,7 @@ public class HomeServlet extends HttpServlet {
     out.println("</table>");
   }
 
-  private void setupDataStore(DataStore dataStore, String source) throws IOException {
+  protected void setupDataStore(DataStore dataStore, String source) throws IOException {
     {
       Reader in = new InputStreamReader(HomeServlet.class.getResourceAsStream(source));
       CSVParser parser = new CSVParser(in, CSVFormat.EXCEL);

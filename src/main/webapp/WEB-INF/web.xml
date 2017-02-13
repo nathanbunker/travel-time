@@ -20,12 +20,20 @@
         <servlet-name>home</servlet-name>
         <servlet-class>org.openimmunizationsoftware.traveltime.HomeServlet</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>distribution</servlet-name>
+        <servlet-class>org.openimmunizationsoftware.traveltime.DistributionServlet</servlet-class>
+    </servlet>
     
     <servlet-mapping>
         <servlet-name>home</servlet-name>
         <url-pattern>/home</url-pattern>
     </servlet-mapping>	 
 
+    <servlet-mapping>
+        <servlet-name>distribution</servlet-name>
+        <url-pattern>/distribution</url-pattern>
+    </servlet-mapping>	 
 
 
 </web-app>
